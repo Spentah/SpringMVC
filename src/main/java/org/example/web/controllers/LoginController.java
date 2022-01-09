@@ -1,11 +1,13 @@
 package org.example.web.controllers;
 
 import org.apache.log4j.Logger;
+import org.example.app.exceptions.BookShelfLoginException;
 import org.example.app.services.LoginService;
 import org.example.web.dto.LoginForm;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -31,13 +33,14 @@ public class LoginController {
     }
 
     @PostMapping(value = "auth")
-    public String authenticate(LoginForm loginForm) {
+    public String authenticate(LoginForm loginForm) throws BookShelfLoginException {
         if (loginService.authenticate(loginForm)) {
             log.info("login success, redirect to /books/shelf");
             return "redirect:/books/shelf";
         } else {
             log.info("wrong login, redirect to /login");
-            return "redirect:/login";
+            throw new BookShelfLoginException("Invalid username or password!");
         }
     }
+
 }

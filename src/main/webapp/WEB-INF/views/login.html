@@ -17,8 +17,9 @@
 
 </head>
 <body>
+<div id="login_form">
     <form method="post" th:action="@{/login/auth}" th:object="${loginForm}">
-        <div id="login_form">
+            <img class="login_item" th:src="@{/images/logo.jpg}">
             <input class="login_item" type="text" placeholder="username" th:field="*{username}">
             <br>
             <input class="password_item" type="password" placeholder="password" th:field="*{password}">
