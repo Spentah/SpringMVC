@@ -24,7 +24,7 @@ public class BookService {
         bookProjectRepository.store(book);
     }
 
-    public boolean removeBookById(String bookId) {
+    public boolean removeBookById(Integer bookId) {
         return bookProjectRepository.removeItemById(bookId);
     }
 
