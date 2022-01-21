@@ -44,13 +44,13 @@ public class BookRepository implements ProjectRepository<Book> {
         parameterSource.addValue("title",book.getTitle());
         parameterSource.addValue("size",book.getSize());
         book.setId(book.hashCode());
-        if (!(book.getAuthor().equals("") && book.getTitle().equals("") && book.getSize() == null)) {
+//        if (!(book.getAuthor().equals("") && book.getTitle().equals("") && book.getSize() == null)) {
 //            repo.add(book);
             jdbcTemplate.update("INSERT INTO books(author,title,size) VALUES(:author, :title, :size)", parameterSource);
             log.info("store new book: " + book);
-        } else {
+//        } else {
             log.info("cannot store book: " + book);
-        }
+//        }
     }
 
     @Override
@@ -68,9 +68,12 @@ public class BookRepository implements ProjectRepository<Book> {
     }
 
     public void removeByRegex(String regex) {
+        MapSqlParameterSource parameterSource = new MapSqlParameterSource();
+        parameterSource.addValue("regex",regex);
         retrieveAll().forEach(book -> {
             if (book.getTitle().matches(regex) || book.getSize().toString().matches(regex) || book.getAuthor().matches(regex)) {
 //                repo.remove(book);
+                jdbcTemplate.update("DELETE FROM books WHERE title = :regex OR size = :regex OR author = :regex", parameterSource);
                 log.info("book delete by regex: " + book);
             }
         });

@@ -1,19 +1,23 @@
 package org.example.web.controllers;
 
 import org.apache.log4j.Logger;
+import org.example.app.exceptions.FileException;
 import org.example.app.services.BookService;
 import org.example.web.dto.Book;
 import org.example.web.dto.BookIdToRemove;
+import org.example.web.dto.BookRegexToRemove;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 
 @Controller
 @RequestMapping(value = "books")
@@ -32,6 +36,7 @@ public class BooksShelfController {
         log.info("got books shelf");
         model.addAttribute("book", new Book());
         model.addAttribute("bookIdToRemove", new BookIdToRemove());
+        model.addAttribute("bookRegexToRemove", new BookRegexToRemove());
         model.addAttribute("bookList", bookService.getAllBooks());
         return "book_shelf";
     }
@@ -41,6 +46,7 @@ public class BooksShelfController {
         if (bindingResult.hasErrors()) {
             model.addAttribute("book", book);
             model.addAttribute("bookIdToRemove", new BookIdToRemove());
+            model.addAttribute("bookRegexToRemove", new BookRegexToRemove());
             model.addAttribute("bookList", bookService.getAllBooks());
             return "book_shelf";
         } else {
@@ -55,6 +61,7 @@ public class BooksShelfController {
         if (bindingResult.hasErrors()) {
             model.addAttribute("book", new Book());
             model.addAttribute("bookList", bookService.getAllBooks());
+            model.addAttribute("bookRegexToRemove", new BookRegexToRemove());
             return "book_shelf";
         } else {
             bookService.removeBookById(bookIdToRemove.getId());
@@ -63,8 +70,49 @@ public class BooksShelfController {
     }
 
     @PostMapping(value = "removeByRegex")
-    public String removeBookByRegex(@RequestParam(value = "queryRegex") String queryRegex) {
-        bookService.removeBookByRegex(queryRegex);
+    public String removeBookByRegex(@Valid BookRegexToRemove bookRegexToRemove, BindingResult bindingResult, Model model) {
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("book", new Book());
+            model.addAttribute("bookIdToRemove", new BookIdToRemove());
+            model.addAttribute("bookList", bookService.getAllBooks());
+            return "book_shelf";
+        } else {
+            bookService.removeBookByRegex(bookRegexToRemove.getRegex());
+            return "redirect:/books/shelf";
+        }
+    }
+
+    @PostMapping(value = "uploadFile")
+    public String uploadFile(@RequestParam("file")MultipartFile file) throws IOException, FileException {
+        String name = file.getOriginalFilename();
+        byte[] bytes = file.getBytes();
+        if (bytes.length == 0) {
+            throw new FileException("File couldn't be empty!");
+        }
+
+        String rootPath = System.getProperty("catalina.home");
+        File dir = new File(rootPath + File.separator + "external_uploads");
+
+        if (!dir.exists()) {
+            dir.mkdirs();
+        }
+
+        File serverFile = new File(dir.getAbsolutePath() + File.separator + name);
+        BufferedOutputStream stream = new BufferedOutputStream(new FileOutputStream(serverFile));
+        stream.write(bytes);
+        log.info("new file uploaded " + serverFile.getAbsolutePath());
+        stream.close();
+
+        return "redirect:/books/shelf";
+    }
+
+    @ExceptionHandler(FileException.class)
+    public String fileHandle(Model model, FileException exception) {
+        model.addAttribute("fileError", exception.getMessage());
+        model.addAttribute("book", new Book());
+        model.addAttribute("bookIdToRemove", new BookIdToRemove());
+        model.addAttribute("bookRegexToRemove", new BookRegexToRemove());
+        model.addAttribute("bookList", bookService.getAllBooks());
         return "redirect:/books/shelf";
     }
 }

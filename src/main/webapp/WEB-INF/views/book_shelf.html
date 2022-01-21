@@ -36,9 +36,11 @@
                 <tr>
                     <td>
                         <input type="text" placeholder="author" th:field="*{author}">
+                        <p th:if="${#fields.hasErrors()}">Value of this field must be not empty!</p>
                     </td>
                     <td>
                         <input type="text" placeholder="book_title" th:field="*{title}">
+                        <p th:if="${#fields.hasErrors()}">Value of this field must be not empty!</p>
                     </td>
                     <td>
                         <input type="text" placeholder="pages" th:field="*{size}">
@@ -67,7 +69,7 @@
             </table>
         </form>
 
-        <form method="post" th:action="@{/books/removeByRegex}">
+        <form method="post" th:action="@{/books/removeByRegex}" th:object="${bookRegexToRemove}">
             <table>
                 <tr>
                     <td>
@@ -75,6 +77,25 @@
                     </td>
                     <td>
                         <input type="submit" value="remove by regex">
+                    </td>
+                    <td th:if="${#fields.hasErrors()}">
+                        <p>Wrong regex or not found</p>
+                    </td>
+                </tr>
+            </table>
+        </form>
+
+        <form method="post" th:action="@{/books/uploadFile}" enctype="multipart/form-data">
+            <table>
+                <tr>
+                    <td>
+                        <input type="file" name="file"/>
+                    </td>
+                    <td>
+                        <input type="submit" value="Uload"/>
+                    </td>
+                    <td th:if="${#fields.hasErrors()}">
+                        <p>Wrong id or not found</p>
                     </td>
                 </tr>
             </table>
